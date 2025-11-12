@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Monitor de Sensores - Contagem de Alunos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #333; text-align: center; }
+  h1 { color: #1e90ff; margin-top: 20px; }
+  #container { width: 90%; max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+  canvas { width: 100%; height: 400px; }
+</style>
+</head>
+<body>
+  <div id="container">
+    <h1>📊 Monitor de Presença - Arduino + ESP8266</h1>
+    <p>Atualização automática a cada 5 segundos</p>
+    <canvas id="grafico"></canvas>
+  </div>
+
+<script>
+const ctx = document.getElementById('grafico').getContext('2d');
+let grafico;
+
+async function atualizar() {
+  const resp = await fetch('dados.json');
+  const dados = await resp.json();
+
+  const labels = dados.map(d => d.hora);
+  const sensor1 = dados.map(d => d.d1);
+  const sensor2 = dados.map(d => d.d2);
+
+  const data = {
+    labels: labels,
+    datasets: [
+      { label: 'Sensor 1 (Entrada)', data: sensor1, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.2)', fill: true },
+      { label: 'Sensor 2 (Saída)', data: sensor2, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.2)', fill: true }
+    ]
+  };
+
+  if (!grafico) {
+    grafico = new Chart(ctx, {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Distância (cm)' } },
+          x: { title: { display: true, text: 'Hora da Medição' } }
+        }
+      }
+    });
+  } else {
+    grafico.data = data;
+    grafico.update();
+  }
+}
+
+// Atualiza a cada 5 segundos
+setInterval(atualizar, 5000);
+atualizar();
+</script>
+</body>
+</html>
